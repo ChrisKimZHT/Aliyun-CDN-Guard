@@ -1,0 +1,56 @@
+sls:
+  endpoint: https://cn-hangzhou.log.aliyuncs.com
+  region: cn-hangzhou
+  project: your-sls-project
+  logstore: your-cdn-logstore
+  consumer_group: aliyun-cdn-guard
+  consumer_name: ""              # empty = hostname-pid
+  cursor_position: end            # end, begin, or ISO time on first startup only
+  fetch_interval_seconds: 2
+
+cdn:
+  region: cn-hangzhou
+  endpoint: cdn.aliyuncs.com
+  domains:
+    - cdn.example.com
+  ip_acl_xfwd: "on"               # on matches SLS client_ip; off/all are also accepted
+  sync_interval_seconds: 10
+  dry_run: true                   # validate with true before enabling real blocking
+
+detection:
+  threshold: 1000                 # block on the Nth matching request
+  window_seconds: 60             # 分钟请换算为秒，例如 5 分钟 = 300
+  retention_seconds: 3600         # must be >= window_seconds
+  ua:
+    enabled: false
+    match_regex: null             # Python regex; non-matches do not participate
+  uri:
+    enabled: false
+    match_regex: null             # applied to normalized URI
+    query_parameters:
+      mode: keep                  # keep, ignore_all, ignore_selected
+      ignored_names:              # used only by ignore_selected
+        - token
+        - timestamp
+
+penalty:
+  base_duration_seconds: 600     # 所有时长统一使用秒
+  multiplier: 2.0
+  max_duration_seconds: 86400
+
+whitelist:
+  domains: []
+  ips:                             # IP or CIDR; IPv4 and IPv6 supported
+    - 127.0.0.1
+  ua_regexes: []                   # Python regular expressions
+  uri_regexes: []                  # matched against normalized URI
+
+# These are script-owned permanent entries. They are applied only to listed domains.
+permanent_blocklist:
+  "cdn.example.com": []           # IP or CIDR
+
+storage:
+  path: data/guard.db
+
+logging:
+  level: INFO
