@@ -44,10 +44,6 @@ class Detector:
 
         ua_config = self.config.detection.ua
         uri_config = self.config.detection.uri
-        if ua_config.enabled and ua_config.match_regex and not ua_config.match_regex.search(event.user_agent):
-            return None
-        if uri_config.enabled and uri_config.match_regex and not uri_config.match_regex.search(uri_key):
-            return None
 
         penalty = self.config.penalty
         detection = self.config.detection

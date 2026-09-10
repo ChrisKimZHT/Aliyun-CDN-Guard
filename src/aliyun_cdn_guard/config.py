@@ -115,7 +115,6 @@ class CdnConfig:
 @dataclass(frozen=True)
 class DimensionConfig:
     enabled: bool = False
-    match_regex: re.Pattern[str] | None = None
 
 
 @dataclass(frozen=True)
@@ -256,10 +255,9 @@ def load_config(path: str | Path) -> AppConfig:
             threshold=threshold,
             window_seconds=window,
             retention_seconds=retention,
-            ua=DimensionConfig(_bool(ua_raw.get("enabled", False), "detection.ua.enabled"), _compile_optional(ua_raw.get("match_regex"), "detection.ua.match_regex")),
+            ua=DimensionConfig(_bool(ua_raw.get("enabled", False), "detection.ua.enabled")),
             uri=UriConfig(
                 _bool(uri_raw.get("enabled", False), "detection.uri.enabled"),
-                _compile_optional(uri_raw.get("match_regex"), "detection.uri.match_regex"),
                 query_mode,
                 frozenset(str(item) for item in ignored_names),
             ),
