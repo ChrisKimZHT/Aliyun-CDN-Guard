@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import logging
 import os
 import signal
 import socket
@@ -9,6 +8,7 @@ import time
 
 from alibabacloud_credentials.client import Client as CredentialClient
 from aliyun.log.consumer import ConsumerWorker, CursorPosition, LogHubConfig
+from loguru import logger
 
 from .cdn import BlacklistReconciler, CdnGateway
 from .config import AppConfig
@@ -16,8 +16,6 @@ from .consumer import LogProcessor
 from .credentials import SlsCredentialProvider
 from .detector import Detector
 from .storage import Storage
-
-logger = logging.getLogger(__name__)
 
 
 def run(config: AppConfig) -> None:
@@ -51,7 +49,7 @@ def run(config: AppConfig) -> None:
     stop_event = threading.Event()
 
     def request_stop(signum: int, _frame: object) -> None:
-        logger.info("received signal %s, shutting down", signum)
+        logger.info("received signal {}, shutting down", signum)
         stop_event.set()
 
     for name in ("SIGINT", "SIGTERM"):
@@ -61,11 +59,11 @@ def run(config: AppConfig) -> None:
     try:
         reconciler.start()
         worker.start()
-        logger.info("guard started consumer=%s dry_run=%s", consumer_name, config.cdn.dry_run)
+        logger.info("guard started consumer={} dry_run={}", consumer_name, config.cdn.dry_run)
         while not stop_event.wait(30):
             deleted = detector.prune()
             if deleted:
-                logger.debug("pruned %d old events", deleted)
+                logger.debug("pruned {} old events", deleted)
     finally:
         worker.shutdown()
         reconciler.stop()

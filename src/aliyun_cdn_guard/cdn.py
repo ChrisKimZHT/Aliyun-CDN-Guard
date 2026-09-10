@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import json
-import logging
 import threading
 import time
 
@@ -9,11 +8,10 @@ from alibabacloud_cdn20180510 import models as cdn_models
 from alibabacloud_cdn20180510.client import Client as CdnClient
 from alibabacloud_credentials.client import Client as CredentialClient
 from alibabacloud_tea_openapi import models as open_api_models
+from loguru import logger
 
 from .config import AppConfig
 from .storage import Storage
-
-logger = logging.getLogger(__name__)
 
 
 class CdnGateway:
@@ -90,7 +88,7 @@ class BlacklistReconciler:
                 try:
                     self.reconcile_domain(domain)
                 except Exception:
-                    logger.exception("failed to reconcile CDN blacklist for %s", domain)
+                    logger.exception("failed to reconcile CDN blacklist for {}", domain)
                 self._stop.wait(0.35)  # CDN API limit is 3 requests/second per account.
             self._stop.wait(self.config.cdn.sync_interval_seconds)
 
@@ -103,7 +101,7 @@ class BlacklistReconciler:
 
         if self.config.cdn.dry_run:
             desired = permanent | {record.client_ip for record in records if record.blocked_until > now}
-            logger.info("dry-run CDN blacklist domain=%s desired_managed=%s", domain, sorted(desired))
+            logger.info("dry-run CDN blacklist domain={} desired_managed={}", domain, sorted(desired))
             return
 
         current = self.gateway.get_blacklist(domain)
@@ -130,7 +128,7 @@ class BlacklistReconciler:
                 desired.discard(entry)
         if desired != current:
             self.gateway.set_blacklist(domain, desired)
-            logger.info("updated CDN blacklist domain=%s entries=%d", domain, len(desired))
+            logger.info("updated CDN blacklist domain={} entries={}", domain, len(desired))
         if ownership:
             self.storage.set_ownership(domain, ownership)
         if permanent_ownership:

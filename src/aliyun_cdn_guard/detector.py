@@ -1,16 +1,15 @@
 from __future__ import annotations
 
 import ipaddress
-import logging
 import time
 from dataclasses import replace
+
+from loguru import logger
 
 from .config import AppConfig
 from .models import AccessEvent, BlockDecision
 from .normalization import normalize_uri
 from .storage import Storage
-
-logger = logging.getLogger(__name__)
 
 
 class Detector:
@@ -21,12 +20,12 @@ class Detector:
 
     def process(self, event: AccessEvent, now: int | None = None) -> BlockDecision | None:
         if event.domain not in self._domains:
-            logger.warning("ignoring log for unmanaged domain %s", event.domain)
+            logger.warning("ignoring log for unmanaged domain {}", event.domain)
             return None
         try:
             address = ipaddress.ip_address(event.client_ip)
         except ValueError:
-            logger.warning("ignoring invalid client_ip %r", event.client_ip)
+            logger.warning("ignoring invalid client_ip {!r}", event.client_ip)
             return None
         canonical_ip = address.exploded if address.version == 6 else str(address)
         if event.client_ip != canonical_ip:
@@ -62,7 +61,7 @@ class Detector:
         )
         if decision:
             logger.warning(
-                "abuse threshold reached domain=%s ip=%s count=%d offense=%d blocked_until=%d",
+                "abuse threshold reached domain={} ip={} count={} offense={} blocked_until={}",
                 decision.domain, decision.client_ip, decision.count, decision.offense_count, decision.blocked_until,
             )
         return decision

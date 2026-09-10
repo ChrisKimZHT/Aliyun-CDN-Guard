@@ -1,15 +1,13 @@
 from __future__ import annotations
 
 import hashlib
-import logging
 from typing import Any
 
 from aliyun.log.consumer import ConsumerProcessorBase
+from loguru import logger
 
 from .detector import Detector
 from .models import AccessEvent
-
-logger = logging.getLogger(__name__)
 
 
 class LogProcessor(ConsumerProcessorBase):

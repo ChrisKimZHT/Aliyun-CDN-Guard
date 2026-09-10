@@ -232,6 +232,10 @@ def load_config(path: str | Path) -> AppConfig:
     if not storage_path.is_absolute():
         storage_path = (config_path.parent / storage_path).resolve()
 
+    log_level = str(_section(raw, "logging").get("level", "INFO")).upper()
+    if log_level not in {"TRACE", "DEBUG", "INFO", "SUCCESS", "WARNING", "ERROR", "CRITICAL"}:
+        raise ConfigError(f"logging.level is invalid: {log_level}")
+
     return AppConfig(
         sls=SlsConfig(
             endpoint=_required(sls_raw, "endpoint", "sls"),
@@ -271,5 +275,5 @@ def load_config(path: str | Path) -> AppConfig:
         ),
         permanent_blocklist=permanent,
         storage_path=storage_path,
-        log_level=str(_section(raw, "logging").get("level", "INFO")).upper(),
+        log_level=log_level,
     )

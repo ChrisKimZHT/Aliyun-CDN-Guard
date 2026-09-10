@@ -1,10 +1,10 @@
 from __future__ import annotations
 
 import argparse
-import logging
 import sys
 
 from dotenv import load_dotenv
+from loguru import logger
 
 from .app import run
 from .config import ConfigError, load_config
@@ -26,9 +26,11 @@ def main() -> None:
     except ConfigError as exc:
         print(f"configuration error: {exc}", file=sys.stderr)
         raise SystemExit(2) from exc
-    logging.basicConfig(
-        level=getattr(logging, config.log_level, logging.INFO),
-        format="%(asctime)s %(levelname)s %(name)s %(message)s",
+    logger.remove()
+    logger.add(
+        sys.stderr,
+        level=config.log_level,
+        format="{time:YYYY-MM-DD HH:mm:ss.SSS} {level:<8} {name} {message}",
     )
     if args.check_config:
         print("configuration is valid")
@@ -38,7 +40,7 @@ def main() -> None:
     except KeyboardInterrupt:
         pass
     except Exception:
-        logging.getLogger(__name__).exception("guard terminated unexpectedly")
+        logger.exception("guard terminated unexpectedly")
         raise SystemExit(1)
 
 
