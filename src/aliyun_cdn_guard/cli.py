@@ -34,7 +34,6 @@ def main() -> None:
     logger.add(
         sys.stderr,
         level=config.log_level,
-        format="{time:YYYY-MM-DD HH:mm:ss.SSS} {level:<8} {name} {message}",
     )
     if args.check_config:
         print("configuration is valid")
