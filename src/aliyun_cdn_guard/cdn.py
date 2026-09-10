@@ -88,7 +88,7 @@ class BlacklistReconciler:
                 try:
                     self.reconcile_domain(domain)
                 except Exception:
-                    logger.exception("failed to reconcile CDN blacklist for {}", domain)
+                    logger.exception("failed to reconcile CDN blacklist, domain={}", domain)
                 self._stop.wait(0.35)  # CDN API limit is 3 requests/second per account.
             self._stop.wait(self.config.cdn.sync_interval_seconds)
 
@@ -101,7 +101,7 @@ class BlacklistReconciler:
 
         if self.config.cdn.dry_run:
             desired = permanent | {record.client_ip for record in records if record.blocked_until > now}
-            logger.info("dry-run CDN blacklist domain={} desired_managed={}", domain, sorted(desired))
+            logger.info("dry-run CDN blacklist, domain={}, desired_managed={}", domain, sorted(desired))
             return
 
         current = self.gateway.get_blacklist(domain)
@@ -128,7 +128,7 @@ class BlacklistReconciler:
                 desired.discard(entry)
         if desired != current:
             self.gateway.set_blacklist(domain, desired)
-            logger.info("updated CDN blacklist domain={} entries={}", domain, len(desired))
+            logger.info("updated CDN blacklist, domain={}, entries={}", domain, len(desired))
         if ownership:
             self.storage.set_ownership(domain, ownership)
         if permanent_ownership:

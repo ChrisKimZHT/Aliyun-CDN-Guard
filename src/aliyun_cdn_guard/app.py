@@ -49,7 +49,7 @@ def run(config: AppConfig) -> None:
     stop_event = threading.Event()
 
     def request_stop(signum: int, _frame: object) -> None:
-        logger.info("received signal {}, shutting down", signum)
+        logger.info("received signal={}, shutting down", signum)
         stop_event.set()
 
     for name in ("SIGINT", "SIGTERM"):
@@ -59,7 +59,7 @@ def run(config: AppConfig) -> None:
     try:
         reconciler.start()
         worker.start()
-        logger.info("guard started consumer={} dry_run={}", consumer_name, config.cdn.dry_run)
+        logger.info("guard started, consumer={}, dry_run={}", consumer_name, config.cdn.dry_run)
         while not stop_event.wait(30):
             deleted = detector.prune()
             if deleted:

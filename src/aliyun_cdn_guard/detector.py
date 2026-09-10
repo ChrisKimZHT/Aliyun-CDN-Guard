@@ -20,12 +20,12 @@ class Detector:
 
     def process(self, event: AccessEvent, now: int | None = None) -> BlockDecision | None:
         if event.domain not in self._domains:
-            logger.warning("ignoring log for unmanaged domain {}", event.domain)
+            logger.warning("ignoring log, reason=unmanaged domain, domain={}", event.domain)
             return None
         try:
             address = ipaddress.ip_address(event.client_ip)
         except ValueError:
-            logger.warning("ignoring invalid client_ip {!r}", event.client_ip)
+            logger.warning("ignoring log, reason=invalid client_ip, client_ip={!r}", event.client_ip)
             return None
         canonical_ip = address.exploded if address.version == 6 else str(address)
         if event.client_ip != canonical_ip:
@@ -61,7 +61,7 @@ class Detector:
         )
         if decision:
             logger.warning(
-                "abuse threshold reached domain={} ip={} count={} offense={} blocked_until={}",
+                "abuse threshold reached, domain={}, ip={}, count={}, offense={}, blocked_until={}",
                 decision.domain, decision.client_ip, decision.count, decision.offense_count, decision.blocked_until,
             )
         return decision
