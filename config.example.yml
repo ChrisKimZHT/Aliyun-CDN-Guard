@@ -17,7 +17,7 @@ cdn:
     - cdn.example.com
   ip_acl_xfwd: "on"           # [通常无需修改] IP 判断：on=XFF；off=直连 IP；all=两者
   sync_interval_seconds: 10   # [通常无需修改] 将本地封禁状态同步到 CDN 的间隔秒数
-  dry_run: true               # true 仅记录拟封禁结果，不修改 CDN 黑名单
+  dry_run: true               # 建议先 dry_run 确认无误后再设为 false 上线
 
 # 访问频率检测规则
 detection:
@@ -30,9 +30,7 @@ detection:
     enabled: false         # 是否将规范化 URI 纳入聚合维度
     query_parameters:
       mode: keep           # 参数处理：keep=保留；ignore_all=全忽略；ignore_selected=按名称忽略
-      ignored_names:       # mode 为 ignore_selected 时忽略的参数名
-        - token
-        - timestamp
+      ignored_names: []    # mode 为 ignore_selected 时忽略的参数名
 
 # 重复违规的封禁时长
 penalty:
@@ -50,7 +48,7 @@ whitelist:
 
 # 由本程序持续同步的永久黑名单；域名必须已列入 cdn.domains
 permanent_blocklist:
-  "cdn.example.com": []  # 永久封禁的 IP 或 CIDR 列表
+  # "cdn.example.com": []  # 永久封禁的 IP 或 CIDR 列表
 
 storage:
   path: data/guard.db    # [通常无需修改] SQLite 数据库路径，相对路径基于配置文件目录
