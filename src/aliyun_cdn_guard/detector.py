@@ -20,7 +20,7 @@ class Detector:
 
     def process(self, event: AccessEvent, now: int | None = None) -> BlockDecision | None:
         if event.domain not in self._domains:
-            logger.warning("ignoring log, reason=unmanaged domain, domain={}", event.domain)
+            logger.debug("ignoring log, reason=unmanaged domain, domain={}", event.domain)
             return None
         try:
             address = ipaddress.ip_address(event.client_ip)
