@@ -6,7 +6,6 @@ import sys
 from dotenv import load_dotenv
 from loguru import logger
 
-from .app import run
 from .config import ConfigError, load_config
 
 
@@ -21,6 +20,11 @@ def build_parser() -> argparse.ArgumentParser:
 def main() -> None:
     args = build_parser().parse_args()
     load_dotenv(args.env_file, override=False)
+    # The Alibaba Cloud credentials SDK reads and caches credential-related
+    # environment variables when it is imported.  Import the application only
+    # after loading dotenv so local credentials are visible to the SDK.
+    from .app import run
+
     try:
         config = load_config(args.config)
     except ConfigError as exc:
