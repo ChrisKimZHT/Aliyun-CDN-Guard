@@ -16,16 +16,8 @@ dependencies = [
   "PyYAML>=6.0,<7",
 ]
 
-[project.optional-dependencies]
-test = ["pytest>=9,<10"]
-
 [project.scripts]
 aliyun-cdn-guard = "aliyun_cdn_guard.cli:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
-
-[tool.pytest.ini_options]
-testpaths = ["tests"]
-addopts = "-q"
-

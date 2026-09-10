@@ -1,9 +1,0 @@
-name: aliyun-cdn-guard
-channels:
-  - defaults
-dependencies:
-  - python=3.14
-  - pip
-  - pip:
-      - -e .[test]
-
