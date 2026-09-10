@@ -1,56 +1,59 @@
+# SLS CDN 访问日志来源
 sls:
-  endpoint: https://cn-hangzhou.log.aliyuncs.com
-  region: cn-hangzhou
-  project: your-sls-project
-  logstore: your-cdn-logstore
-  consumer_group: aliyun-cdn-guard
-  consumer_name: ""              # empty = hostname-pid
-  cursor_position: end            # end, begin, or ISO time on first startup only
-  fetch_interval_seconds: 2
+  endpoint: https://cn-shanghai.log.aliyuncs.com  # SLS 接入地址，需与 Project 所在地域一致，若同地域可在域名地域后加 -intranet
+  region: cn-shanghai                             # SLS 地域 ID
+  project: your-sls-project                       # 存放 CDN 日志的 Project 名称
+  logstore: your-cdn-logstore                     # 存放 CDN 日志的 Logstore 名称
+  consumer_group: aliyun-cdn-guard                # [通常无需修改] 消费组名称，同组实例共享消费进度
+  consumer_name: ""                               # [通常无需修改] 消费者唯一名称，留空时自动生成
+  cursor_position: end                            # [通常无需修改] 首次消费位置：end、begin 或 ISO 时间
+  fetch_interval_seconds: 2                       # [通常无需修改] 拉取日志的间隔秒数，最小为 1
 
+# CDN 黑名单同步目标
 cdn:
-  region: cn-hangzhou
-  endpoint: cdn.aliyuncs.com
-  domains:
+  region: cn-shanghai         # 调用 CDN OpenAPI 使用的地域 ID
+  endpoint: cdn.aliyuncs.com  # [通常无需修改] CDN OpenAPI 接入地址，不含 https://
+  domains:                    # 要检测并管理黑名单的 CDN 加速域名
     - cdn.example.com
-  ip_acl_xfwd: "on"               # on matches SLS client_ip; off/all are also accepted
-  sync_interval_seconds: 10
-  dry_run: true                   # validate with true before enabling real blocking
+  ip_acl_xfwd: "on"           # [通常无需修改] IP 判断：on=XFF；off=直连 IP；all=两者
+  sync_interval_seconds: 10   # [通常无需修改] 将本地封禁状态同步到 CDN 的间隔秒数
+  dry_run: true               # true 仅记录拟封禁结果，不修改 CDN 黑名单
 
+# 访问频率检测规则
 detection:
-  threshold: 1000                 # block on the Nth matching request
-  window_seconds: 60             # 分钟请换算为秒，例如 5 分钟 = 300
-  retention_seconds: 3600         # must be >= window_seconds
+  threshold: 120           # 同一聚合对象在窗口内达到此请求数时封禁
+  window_seconds: 60       # 统计窗口秒数，例如 5 分钟填 300
+  retention_seconds: 3600  # [通常无需修改] 事件记录保留秒数，不得小于统计窗口
   ua:
-    enabled: false
-    match_regex: null             # Python regex; non-matches do not participate
+    enabled: false         # 是否将 User-Agent 纳入聚合维度
   uri:
-    enabled: false
-    match_regex: null             # applied to normalized URI
+    enabled: false         # 是否将规范化 URI 纳入聚合维度
     query_parameters:
-      mode: keep                  # keep, ignore_all, ignore_selected
-      ignored_names:              # used only by ignore_selected
+      mode: keep           # 参数处理：keep=保留；ignore_all=全忽略；ignore_selected=按名称忽略
+      ignored_names:       # mode 为 ignore_selected 时忽略的参数名
         - token
         - timestamp
 
+# 重复违规的封禁时长
 penalty:
-  base_duration_seconds: 600     # 所有时长统一使用秒
-  multiplier: 2.0
-  max_duration_seconds: 86400
+  base_duration_seconds: 600   # 首次封禁秒数
+  multiplier: 2.0              # 每次再次违规的时长倍数，最小为 1
+  max_duration_seconds: 86400  # 单次封禁时长上限，不得小于首次时长
 
+# 任一条件命中即跳过记录和检测
 whitelist:
-  domains: []
-  ips:                             # IP or CIDR; IPv4 and IPv6 supported
+  domains: []      # 完全跳过检测的域名
+  ips:             # 完全跳过检测的 IP 或 CIDR，支持 IPv4/IPv6
     - 127.0.0.1
-  ua_regexes: []                   # Python regular expressions
-  uri_regexes: []                  # matched against normalized URI
+  ua_regexes: []   # 完全跳过检测的 UA 正则列表
+  uri_regexes: []  # 完全跳过检测的规范化 URI 正则列表
 
-# These are script-owned permanent entries. They are applied only to listed domains.
+# 由本程序持续同步的永久黑名单；域名必须已列入 cdn.domains
 permanent_blocklist:
-  "cdn.example.com": []           # IP or CIDR
+  "cdn.example.com": []  # 永久封禁的 IP 或 CIDR 列表
 
 storage:
-  path: data/guard.db
+  path: data/guard.db    # [通常无需修改] SQLite 数据库路径，相对路径基于配置文件目录
 
 logging:
-  level: INFO
+  level: INFO            # [通常无需修改] 日志级别，如 DEBUG、INFO、WARNING、ERROR
