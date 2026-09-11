@@ -21,6 +21,7 @@ class BlockDecision:
     count: int
     blocked_until: int
     offense_count: int
+    blocked_at: int = 0
 
 
 @dataclass(frozen=True)
@@ -30,4 +31,3 @@ class BlockRecord:
     blocked_until: int
     offense_count: int
     cdn_owned: bool | None
-

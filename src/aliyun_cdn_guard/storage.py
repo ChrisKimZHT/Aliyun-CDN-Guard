@@ -107,7 +107,7 @@ class Storage:
                     (event.domain, event.client_ip, first_blocked, blocked_until, offense),
                 )
                 self._connection.execute("COMMIT")
-                return BlockDecision(event.domain, event.client_ip, count, blocked_until, offense)
+                return BlockDecision(event.domain, event.client_ip, count, blocked_until, offense, now)
             except Exception:
                 self._connection.execute("ROLLBACK")
                 raise

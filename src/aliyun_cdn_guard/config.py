@@ -157,6 +157,7 @@ class AppConfig:
     permanent_blocklist: dict[str, tuple[str, ...]] = field(default_factory=dict)
     storage_path: Path = Path("data/guard.db")
     log_level: str = "INFO"
+    block_log_path: Path = Path("data/blocks.jsonl")
 
 
 def load_config(path: str | Path) -> AppConfig:
@@ -232,9 +233,13 @@ def load_config(path: str | Path) -> AppConfig:
     if not storage_path.is_absolute():
         storage_path = (config_path.parent / storage_path).resolve()
 
-    log_level = str(_section(raw, "logging").get("level", "INFO")).upper()
+    logging_raw = _section(raw, "logging")
+    log_level = str(logging_raw.get("level", "INFO")).upper()
     if log_level not in {"TRACE", "DEBUG", "INFO", "SUCCESS", "WARNING", "ERROR", "CRITICAL"}:
         raise ConfigError(f"logging.level is invalid: {log_level}")
+    block_log_path = Path(str(logging_raw.get("block_log_path", "data/blocks.jsonl")))
+    if not block_log_path.is_absolute():
+        block_log_path = (config_path.parent / block_log_path).resolve()
 
     return AppConfig(
         sls=SlsConfig(
@@ -275,5 +280,6 @@ def load_config(path: str | Path) -> AppConfig:
         ),
         permanent_blocklist=permanent,
         storage_path=storage_path,
+        block_log_path=block_log_path,
         log_level=log_level,
     )

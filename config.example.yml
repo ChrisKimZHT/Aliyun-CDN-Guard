@@ -46,12 +46,12 @@ whitelist:
   ua_regexes: []   # 完全跳过检测的 UA 正则列表
   uri_regexes: []  # 完全跳过检测的规范化 URI 正则列表
 
-# 由本程序持续同步的永久黑名单；域名必须已列入 cdn.domains
 permanent_blocklist:
   # "cdn.example.com": []  # 永久封禁的 IP 或 CIDR 列表
 
 storage:
-  path: data/guard.db    # [通常无需修改] SQLite 数据库路径，相对路径基于配置文件目录
+  path: data/guard.db      # [通常无需修改] SQLite 数据库路径，相对路径基于配置文件目录
 
 logging:
-  level: INFO            # [通常无需修改] 日志级别，如 DEBUG、INFO、WARNING、ERROR
+  level: INFO                        # [通常无需修改] 日志级别，如 DEBUG、INFO、WARNING、ERROR
+  block_log_path: data/blocks.jsonl  # 每次产生封禁时追加一行 JSON；相对路径基于配置文件目录

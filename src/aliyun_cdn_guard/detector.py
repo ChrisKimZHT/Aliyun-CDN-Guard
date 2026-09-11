@@ -6,6 +6,7 @@ from dataclasses import replace
 
 from loguru import logger
 
+from .block_log import BlockLog
 from .config import AppConfig
 from .models import AccessEvent, BlockDecision
 from .normalization import normalize_uri
@@ -13,9 +14,10 @@ from .storage import Storage
 
 
 class Detector:
-    def __init__(self, config: AppConfig, storage: Storage):
+    def __init__(self, config: AppConfig, storage: Storage, block_log: BlockLog | None = None):
         self.config = config
         self.storage = storage
+        self.block_log = block_log
         self._domains = frozenset(config.cdn.domains)
 
     def process(self, event: AccessEvent, now: int | None = None) -> BlockDecision | None:
@@ -60,9 +62,15 @@ class Detector:
             now=now,
         )
         if decision:
+            if self.block_log is not None:
+                try:
+                    self.block_log.append(event, decision)
+                except OSError:
+                    logger.exception("failed to append block audit log, path={}", self.block_log.path)
             logger.warning(
-                "abuse threshold reached, domain={}, ip={}, count={}, offense={}, blocked_until={}",
-                decision.domain, decision.client_ip, decision.count, decision.offense_count, decision.blocked_until,
+                "abuse threshold reached, domain={}, ip={}, count={}, offense={}, blocked_at={}, blocked_until={}",
+                decision.domain, decision.client_ip, decision.count, decision.offense_count,
+                decision.blocked_at, decision.blocked_until,
             )
         return decision
 
