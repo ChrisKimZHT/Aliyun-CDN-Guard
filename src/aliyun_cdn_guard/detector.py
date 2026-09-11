@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import ipaddress
+import threading
 import time
+from collections import Counter
 from dataclasses import replace
 
 from loguru import logger
@@ -19,6 +21,26 @@ class Detector:
         self.storage = storage
         self.block_log = block_log
         self._domains = frozenset(config.cdn.domains)
+        self._stats_lock = threading.Lock()
+        self._received_requests: Counter[str] = Counter()
+        self._processed_requests: Counter[str] = Counter()
+
+    def record_received(self, domain: str) -> None:
+        if domain not in self._domains:
+            return
+        with self._stats_lock:
+            self._received_requests[domain] += 1
+
+    def snapshot_request_counts(self, reset: bool = False) -> dict[str, tuple[int, int]]:
+        with self._stats_lock:
+            snapshot = {
+                domain: (self._received_requests[domain], self._processed_requests[domain])
+                for domain in self.config.cdn.domains
+            }
+            if reset:
+                self._received_requests.clear()
+                self._processed_requests.clear()
+        return snapshot
 
     def process(self, event: AccessEvent, now: int | None = None) -> BlockDecision | None:
         if event.domain not in self._domains:
@@ -42,6 +64,9 @@ class Detector:
             or any(pattern.search(uri_key) for pattern in wl.uri_regexes)
         ):
             return None
+
+        with self._stats_lock:
+            self._processed_requests[event.domain] += 1
 
         ua_config = self.config.detection.ua
         uri_config = self.config.detection.uri

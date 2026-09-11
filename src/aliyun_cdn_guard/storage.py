@@ -120,6 +120,15 @@ class Storage:
             ).fetchall()
         return [BlockRecord(row["domain"], row["client_ip"], row["blocked_until"], row["offense_count"], None if row["cdn_owned"] is None else bool(row["cdn_owned"])) for row in rows]
 
+    def active_block_entries(self, domain: str, now: int | None = None) -> set[str]:
+        now = int(time.time()) if now is None else now
+        with self._lock:
+            rows = self._connection.execute(
+                "SELECT client_ip FROM blocks WHERE domain = ? AND blocked_until > ?",
+                (domain, now),
+            ).fetchall()
+        return {str(row["client_ip"]) for row in rows}
+
     def set_ownership(self, domain: str, ownership: dict[str, bool]) -> None:
         with self._lock, self._connection:
             self._connection.executemany(

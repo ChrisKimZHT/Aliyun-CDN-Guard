@@ -61,10 +61,33 @@ def run(config: AppConfig) -> None:
         reconciler.start()
         worker.start()
         logger.info("guard started, consumer={}, dry_run={}", consumer_name, config.cdn.dry_run)
-        while not stop_event.wait(30):
-            deleted = detector.prune()
-            if deleted:
-                logger.debug("pruned {} old events", deleted)
+        next_prune = time.monotonic() + 30
+        next_report = time.monotonic() + config.report_interval_seconds
+        while not stop_event.is_set():
+            timeout = max(0.0, min(next_prune, next_report) - time.monotonic())
+            if stop_event.wait(timeout):
+                break
+            monotonic_now = time.monotonic()
+            if monotonic_now >= next_prune:
+                deleted = detector.prune()
+                if deleted:
+                    logger.debug("pruned {} old events", deleted)
+                next_prune = monotonic_now + 30
+            if monotonic_now >= next_report:
+                report_time = int(time.time())
+                counts = detector.snapshot_request_counts(reset=True)
+                for domain in config.cdn.domains:
+                    received, processed = counts[domain]
+                    blocked = storage.active_block_entries(domain, report_time)
+                    blocked.update(config.permanent_blocklist.get(domain, ()))
+                    logger.info(
+                        "periodic report, {}, received={}, processed={}, blocked_ips={}",
+                        domain,
+                        received,
+                        processed,
+                        len(blocked),
+                    )
+                next_report = monotonic_now + config.report_interval_seconds
     finally:
         worker.shutdown()
         reconciler.stop()

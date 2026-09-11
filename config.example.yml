@@ -54,4 +54,5 @@ storage:
 
 logging:
   level: INFO                        # [通常无需修改] 日志级别，如 DEBUG、INFO、WARNING、ERROR
+  report_interval_seconds: 60        # INFO 状态汇报间隔，按 CDN 输出周期请求数和当前封禁 IP 数
   block_log_path: data/blocks.jsonl  # 每次产生封禁时追加一行 JSON；相对路径基于配置文件目录

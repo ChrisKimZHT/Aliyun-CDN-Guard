@@ -19,6 +19,7 @@ class LogProcessor(ConsumerProcessorBase):
         for group in log_groups.LogGroups:
             for log in group.Logs:
                 fields = {content.Key: content.Value for content in log.Contents}
+                self.detector.record_received(fields.get("domain", "").strip().lower())
                 event = self._to_event(fields, int(log.Time))
                 if event is not None:
                     self.detector.process(event)

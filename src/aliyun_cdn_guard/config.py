@@ -157,6 +157,7 @@ class AppConfig:
     permanent_blocklist: dict[str, tuple[str, ...]] = field(default_factory=dict)
     storage_path: Path = Path("data/guard.db")
     log_level: str = "INFO"
+    report_interval_seconds: int = 60
     block_log_path: Path = Path("data/blocks.jsonl")
 
 
@@ -240,6 +241,9 @@ def load_config(path: str | Path) -> AppConfig:
     block_log_path = Path(str(logging_raw.get("block_log_path", "data/blocks.jsonl")))
     if not block_log_path.is_absolute():
         block_log_path = (config_path.parent / block_log_path).resolve()
+    report_interval = int(logging_raw.get("report_interval_seconds", 60))
+    if report_interval < 1:
+        raise ConfigError("logging.report_interval_seconds must be positive")
 
     return AppConfig(
         sls=SlsConfig(
@@ -282,4 +286,5 @@ def load_config(path: str | Path) -> AppConfig:
         storage_path=storage_path,
         block_log_path=block_log_path,
         log_level=log_level,
+        report_interval_seconds=report_interval,
     )
