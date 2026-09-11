@@ -6,6 +6,7 @@ import sys
 from dotenv import load_dotenv
 from loguru import logger
 
+from . import __version__
 from .config import ConfigError, load_config
 
 
@@ -38,6 +39,7 @@ def main() -> None:
     if args.check_config:
         print("configuration is valid")
         return
+    logger.info("aliyun-cdn-guard version={}", __version__)
     try:
         run(config)
     except KeyboardInterrupt:
