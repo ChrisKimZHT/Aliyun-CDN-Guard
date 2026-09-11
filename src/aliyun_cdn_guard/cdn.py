@@ -41,6 +41,15 @@ class CdnGateway:
         return set()
 
     def set_blacklist(self, domain: str, entries: set[str]) -> None:
+        if not entries:
+            self.client.batch_delete_cdn_domain_config(
+                cdn_models.BatchDeleteCdnDomainConfigRequest(
+                    domain_names=domain,
+                    function_names="ip_black_list_set",
+                )
+            )
+            return
+
         ipv4_count = 0
         ipv6_count = 0
         for entry in entries:
